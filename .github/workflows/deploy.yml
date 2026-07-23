@@ -54,14 +54,11 @@ jobs:
             # 1. Đăng nhập / Tải Docker Image mới nhất từ Docker Hub về EC2
             sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/angular-demo:latest
 
-            # 2. Dừng container cũ (nếu đang chạy) để tránh xung đột cổng 80
-            sudo docker stop angular-app || true
+            # 2. Ép dừng và xóa ngay container cũ (nếu có) để giải phóng tên và cổng
+            sudo docker rm -f angular-app || true
 
-            # 3. Xóa container cũ
-            sudo docker rm angular-app || true
+            # 3. Chạy container mới từ Image vừa pull về trên cổng NỘI BỘ 8080 (dành cho Nginx Proxy Manager)
+            sudo docker run -d --name angular-app -p 8080:80 ${{ secrets.DOCKERHUB_USERNAME }}/angular-demo:latest
 
-            # 4. Chạy container mới từ Image vừa pull về trên cổng 80
-            sudo docker run -d --name angular-app -p 80:80 ${{ secrets.DOCKERHUB_USERNAME }}/angular-demo:latest
-
-            # 5. Dọn dẹp các Docker image cũ không còn dùng để giải phóng dung lượng đĩa EC2
+            # 4. Dọn dẹp các Docker image cũ không còn dùng để giải phóng dung lượng đĩa EC2
             sudo docker image prune -f || true
